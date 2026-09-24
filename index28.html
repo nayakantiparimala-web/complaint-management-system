@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Complaint Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #ccc;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 30%;
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        textarea {
+            width: 95%;
+            height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 18px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .delete {
+            background: red;
+        }
+
+        .resolve {
+            background: green;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #222;
+            color: white;
+        }
+
+        .summary {
+            display: flex;
+            gap: 15px;
+        }
+
+        .summary-box {
+            flex: 1;
+            background: #eee;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .number {
+            font-size: 25px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 700px) {
+            input,
+            select,
+            textarea,
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .summary {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Complaint Management System</h1>
+    <p>Full Stack Development Project</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Submit Complaint</h2>
+
+        <input
+            type="text"
+            id="name"
+            placeholder="Your Name"
+        >
+
+        <input
+            type="text"
+            id="subject"
+            placeholder="Complaint Subject"
+        >
+
+        <select id="category">
+            <option value="">Select Category</option>
+            <option value="Hostel">Hostel</option>
+            <option value="College">College</option>
+            <option value="Transport">Transport</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <br>
+
+        <textarea
+            id="description"
+            placeholder="Describe your complaint"
+        ></textarea>
+
+        <br>
+
+        <button onclick="addComplaint()">
+            Submit Complaint
+        </button>
+    </div>
+
+    <div class="card">
+
+        <h2>Complaint Summary</h2>
+
+        <div class="summary">
+
+            <div class="summary-box">
+                <div>Total</div>
+                <div class="number" id="total">0</div>
+            </div>
+
+            <div class="summary-box">
+                <div>Pending</div>
+                <div class="number" id="pending">0</div>
+            </div>
+
+            <div class="summary-box">
+                <div>Resolved</div>
+                <div class="number" id="resolved">0</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Search Complaint</h2>
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search by name or subject"
+            onkeyup="searchComplaint()"
+        >
+    </div>
+
+    <div class="card">
+
+        <h2>Complaint Details</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="complaintTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+    let complaints =
+        JSON.parse(localStorage.getItem("complaints")) || [];
+
+    displayComplaints(complaints);
+
+    function addComplaint() {
+
+        let name =
+            document.getElementById("name").value.trim();
+
+        let subject =
+            document.getElementById("subject").value.trim();
+
+        let category =
+            document.getElementById("category").value;
+
+        let description =
+            document.getElementById("description").value.trim();
+
+        if (
+            name === "" ||
+            subject === "" ||
+            category === "" ||
+            description === ""
+        ) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        let complaint = {
+            name: name,
+            subject: subject,
+            category: category,
+            description: description,
+            status: "Pending"
+        };
+
+        complaints.push(complaint);
+
+        saveData();
+
+        document.getElementById("name").value = "";
+        document.getElementById("subject").value = "";
+        document.getElementById("category").value = "";
+        document.getElementById("description").value = "";
+
+        displayComplaints(complaints);
+    }
+
+    function resolveComplaint(index) {
+
+        complaints[index].status = "Resolved";
+
+        saveData();
+
+        displayComplaints(complaints);
+    }
+
+    function deleteComplaint(index) {
+
+        complaints.splice(index, 1);
+
+        saveData();
+
+        displayComplaints(complaints);
+    }
+
+    function displayComplaints(list) {
+
+        let table =
+            document.getElementById("complaintTable");
+
+        table.innerHTML = "";
+
+        let pendingCount = 0;
+        let resolvedCount = 0;
+
+        list.forEach(function(complaint, index) {
+
+            if (complaint.status === "Pending") {
+                pendingCount++;
+            } else {
+                resolvedCount++;
+            }
+
+            let row =
+                document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${complaint.name}</td>
+                <td>${complaint.subject}</td>
+                <td>${complaint.category}</td>
+                <td>${complaint.description}</td>
+                <td>${complaint.status}</td>
+
+                <td>
+                    <button
+                        class="resolve"
+                        onclick="resolveComplaint(${index})">
+                        Resolve
+                    </button>
+
+                    <button
+                        class="delete"
+                        onclick="deleteComplaint(${index})">
+                        Delete
+                    </button>
+                </td>
+            `;
+
+            table.appendChild(row);
+        });
+
+        document.getElementById("total").innerText =
+            list.length;
+
+        document.getElementById("pending").innerText =
+            pendingCount;
+
+        document.getElementById("resolved").innerText =
+            resolvedCount;
+    }
+
+    function searchComplaint() {
+
+        let text =
+            document.getElementById("search")
+            .value
+            .toLowerCase();
+
+        let filtered =
+            complaints.filter(function(complaint) {
+
+                return (
+                    complaint.name
+                        .toLowerCase()
+                        .includes(text) ||
+
+                    complaint.subject
+                        .toLowerCase()
+                        .includes(text) ||
+
+                    complaint.category
+                        .toLowerCase()
+                        .includes(text)
+                );
+            });
+
+        displayComplaints(filtered);
+    }
+
+    function saveData() {
+
+        localStorage.setItem(
+            "complaints",
+            JSON.stringify(complaints)
+        );
+    }
+
+</script>
+
+</body>
+</html>
